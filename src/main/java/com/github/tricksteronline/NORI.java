@@ -1,4 +1,4 @@
-/*
+package com.github.tricksteronline;/*
 NORI.java: this file is part of the TNT program.
 
 Copyright (C) 2014-2020 Libre Trickster Team

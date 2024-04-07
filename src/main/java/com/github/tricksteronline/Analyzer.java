@@ -1,4 +1,4 @@
-/*
+package com.github.tricksteronline;/*
 Analyzer.java: this file is part of the TNT program.
 
 Copyright (C) 2014-2020 Libre Trickster Team
@@ -13,6 +13,8 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
+import com.github.tricksteronline.JBL;
+import com.github.tricksteronline.NORI;
 import java.io.*;
 import java.nio.*;
 import java.nio.file.*;

@@ -1,4 +1,4 @@
-/*
+package com.github.tricksteronline;/*
 The NORI Tool (TNT), is a program designed to extract & create NORI files for
 the Libre Trickster project.
 

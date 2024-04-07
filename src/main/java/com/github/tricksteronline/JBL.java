@@ -1,4 +1,4 @@
-/*
+package com.github.tricksteronline;/*
 Java Bitmap Library (JBL)
 A fairly spontaneous Java library that contains functions to deal with bitmaps
 both standard and abnormal. Useful for any bitmap not just BMP images.
