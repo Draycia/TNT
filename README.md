@@ -24,13 +24,10 @@ Access the `src` folder from the command prompt or terminal.
 
 Then run the following command:
 ```bash
-javac *.java
+.\gradlew build
 ```
 
-Then to package TNT into a `.jar` file, run this command in the same directory:
-```bash
-jar cfe TNT.jar Main *.class
-```
+The build output will be in `build\libs`
 
 Now you can copy & paste TNT.jar anywhere you like and use it from there.
 
