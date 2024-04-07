@@ -19,6 +19,7 @@ How to compile and package TNT
 ----------------------------------
 
 Install the Java JDK, links: [here](http://jdk.java.net) or [here](https://github.com/ojdkbuild/ojdkbuild)
+
 Clone the project.
 
 Access the `TNT` folder from the command prompt or terminal.
