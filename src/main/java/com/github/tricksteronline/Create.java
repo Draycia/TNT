@@ -34,8 +34,7 @@ and this part of the program is little more than a curiosity.
 
 Development Priority: LOW
 */
-public class Create
-{
+public class Create {
     // class variables
     public static int maxNoF=0,maxNoP=0,pos=0;
     public static int pdex0=0,pdex1=0,pdex2=0,pdex3=0,pdex4=0,pdex5=0,pdex6=0;
@@ -43,136 +42,122 @@ public class Create
     public static int[] bmp_id, point_x, point_y, opacity, flip_axis;
     public static int[] blend_mode, flag_param;
     // constructor for Create class
-    public Create(File config, String bmpDir, NORI nf)
-    {
-        try
-        {
+    public Create(File config, String bmpDir) {
+        try {
             out.println("\nGathering data from config file...");
             // Set the NORI file vars
-            nf.setNFileVars(config,1);
-            nf.checkDir();
-            out.println("NORI filename: "+nf.name);
+            NORI.setNFileVars(config,1);
+            NORI.checkDir();
+            out.println("NORI filename: "+ NORI.name);
             // Get XML Data
-            getConfigData(config,nf);
+            getConfigData(config);
             // Setup NORI file byte array and bytebuffer
-            nfba = new byte[nf.fsize];
+            nfba = new byte[NORI.fsize];
             ByteBuffer nbb = mkLEBB(nfba);
             // Add NORI header to the nfba
-            addNoriHdr(nbb,nf);
+            addNoriHdr(nbb);
             // Add GAWI header to the nfba
-            addGawiHdr(nbb,nf);
+            addGawiHdr(nbb);
             // Add Palette section if it exists; it won't, future-proofing a bit
-            if(nf.hasPalette==1) addPalSection(nbb,nf);
+            if (NORI.hasPalette ==1) addPalSection(nbb);
             // Add BMP Offsets
-            addBmpOffsets(nbb,nf);
+            addBmpOffsets(nbb);
             // Get image data from BMP files
-            imgData = getImgData(bmpDir,nf);
+            imgData = getImgData(bmpDir);
             ByteBuffer dbb = mkLEBB(imgData);
             // Add BMP specs and data
-            addBmpSection(nbb,dbb,nf);
+            addBmpSection(nbb, dbb);
             // Add Animation Offsets
-            addAnimOffsets(nbb,nf);
+            addAnimOffsets(nbb);
             // Get XFB
-            nf.xfb = file2BA(nf.dir+"xfb"+nf.noriVer+".bin");
+            NORI.xfb = file2BA(NORI.dir + "xfb" + NORI.noriVer + ".bin");
             // Add Anims, Frames, Plane Data, & xfb
-            addAnims(nbb,nf);
+            addAnims(nbb);
             out.println("Finalizing file...");
 
             // Set BMP name and location, then write BMP to file
-            File nori = new File(nf.dir+nf.name);
+            File nori = new File(NORI.dir + NORI.name);
             Files.write(nori.toPath(),nfba);
             out.println("NORI File Creation Complete.\n");
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
-            out.println("Error in (CM):\n"+ex);
+            out.println("Error in (CM):\n" + ex);
         }
     }
 
-    private static void addNoriHdr(ByteBuffer bb, NORI nf)
-    {
-        bb.putInt(nf.fsig);
-        bb.putInt(nf.noriVer);
-        bb.putInt(nf.nParam1);
-        bb.putInt(nf.nParam2);
-        bb.putInt(nf.nParam3);
-        bb.putInt(nf.nParam4);
-        bb.putInt(nf.nParam5);
-        bb.putInt(nf.anims);
-        bb.putInt(nf.woGawi);
-        bb.putInt(nf.fsize);
+    private static void addNoriHdr(ByteBuffer bb) {
+        bb.putInt(NORI.fsig);
+        bb.putInt(NORI.noriVer);
+        bb.putInt(NORI.nParam1);
+        bb.putInt(NORI.nParam2);
+        bb.putInt(NORI.nParam3);
+        bb.putInt(NORI.nParam4);
+        bb.putInt(NORI.nParam5);
+        bb.putInt(NORI.anims);
+        bb.putInt(NORI.woGawi);
+        bb.putInt(NORI.fsize);
     }
 
-    private static void addGawiHdr(ByteBuffer bb, NORI nf)
-    {
-        bb.putInt(nf.gsig);
-        bb.putInt(nf.gawiVer);
-        bb.putInt(nf.bpp);
-        bb.putInt(nf.compressed);
-        bb.putInt(nf.hasPalette);
-        bb.putInt(nf.gParam4);
-        bb.putInt(nf.gParam5);
-        bb.putInt(nf.gParam6);
-        bb.putInt(nf.gParam7);
-        bb.putInt(nf.numBMP);
-        bb.putInt(nf.gsize);
+    private static void addGawiHdr(ByteBuffer bb) {
+        bb.putInt(NORI.gsig);
+        bb.putInt(NORI.gawiVer);
+        bb.putInt(NORI.bpp);
+        bb.putInt(NORI.compressed);
+        bb.putInt(NORI.hasPalette);
+        bb.putInt(NORI.gParam4);
+        bb.putInt(NORI.gParam5);
+        bb.putInt(NORI.gParam6);
+        bb.putInt(NORI.gParam7);
+        bb.putInt(NORI.numBMP);
+        bb.putInt(NORI.gsize);
     }
 
-    private static void addPalSection(ByteBuffer bb, NORI nf)
-    {
-
-        bb.putInt(nf.psig);
-        bb.putInt(nf.palVer);
-        bb.putInt(nf.pParam1);
-        bb.putInt(nf.pParam2);
-        bb.putInt(nf.pParam3);
-        bb.putInt(nf.pParam4);
-        bb.putInt(nf.divided);
-        bb.putInt(nf.psize);
-        nf.pb = file2BA(nf.dir+nf.name+"_pal.bin");
-        bb.put(nf.pb);
-        if(nf.psize==808)
-        {
-            bb.putInt(nf.mainS);
-            bb.putInt(nf.mainE);
+    private static void addPalSection(ByteBuffer bb) {
+        bb.putInt(NORI.psig);
+        bb.putInt(NORI.palVer);
+        bb.putInt(NORI.pParam1);
+        bb.putInt(NORI.pParam2);
+        bb.putInt(NORI.pParam3);
+        bb.putInt(NORI.pParam4);
+        bb.putInt(NORI.divided);
+        bb.putInt(NORI.psize);
+        NORI.pb = file2BA(NORI.dir + NORI.name +"_pal.bin");
+        bb.put(NORI.pb);
+        if (NORI.psize ==808) {
+            bb.putInt(NORI.mainS);
+            bb.putInt(NORI.mainE);
         }
     }
 
-    private static void addBmpOffsets(ByteBuffer bb, NORI nf)
-    {
-        for(int i=0; i < nf.numBMP; i++)
-        {
-            bb.putInt(nf.bmpOffsets[i]);
+    private static void addBmpOffsets(ByteBuffer bb) {
+        for (int i = 0; i < NORI.numBMP; i++) {
+            bb.putInt(NORI.bmpOffsets[i]);
         }
     }
 
-    private static byte[] getImgData(String bmpDir, NORI nf)
-    {
-        JBL bl = new JBL();
+    private static byte[] getImgData(String bmpDir) {
         // Setup byte array where pixel data will go
         int ids=0;
-        for(int i=0; i < nf.numBMP; i++)
-        {
-            ids += nf.bmpSpecs[i][1];
+        for (int i = 0; i < NORI.numBMP; i++) {
+            ids += NORI.bmpSpecs[i][1];
         }
         byte[] ba = new byte[ids];
         ByteBuffer bb = mkLEBB(ba);
-        try
-        {
+        try {
             // Gather the list of bmp files
             File dataDir = new File(bmpDir);
             String[] tmpFL = dataDir.list();
-            String[] fl = cleanFL(tmpFL,nf);
+            String[] fl = cleanFL(tmpFL);
             // Alphabetic ordering
             Arrays.sort(fl);
             // Pull the file contents into a byte array for later use
             out.println("Absorbing BMP files:");
-            for(int i=0; i < fl.length; i++)
-            {
+            for (int i=0; i < fl.length; i++) {
                 // output full file name
-                out.println(bmpDir+fl[i]);
+                out.println(bmpDir + fl[i]);
                 // read bmp into a byte array, then wrap in a bytebuffer
-                byte[] bmp = file2BA(bmpDir+fl[i]);
+                byte[] bmp = file2BA(bmpDir + fl[i]);
                 ByteBuffer bbb = mkLEBB(bmp);
                 // Strip the header off the image
                 bbb.position(10);
@@ -184,127 +169,115 @@ public class Create
                 byte[] hdrless = new byte[pxLen];
                 bbb.get(hdrless,0,pxLen);
                 // Set BMP header vars from xml data
-                bl.setBmpVars(nf.bmpSpecs[i][2],nf.bmpSpecs[i][3],nf.bpp);
+                JBL.setBmpVars(NORI.bmpSpecs[i][2], NORI.bmpSpecs[i][3], NORI.bpp);
                 // NORI format uses top-down scanlines
-                byte[] revData = bl.reverseRows(hdrless);
+                byte[] revData = JBL.reverseRows(hdrless);
                 // Strip any padding on the pixels
-                byte[] rawData = bl.stripPadding(revData);
+                byte[] rawData = JBL.stripPadding(revData);
                 // Add raw data to ba byte array
                 bb.put(rawData);
             }
         }
-        catch(Exception ex)
-        {
+        catch (Exception ex) {
             out.println("Error in (getImgData):\n"+ex);
         }
         return ba;
     }
 
-    private static void addBmpSection(ByteBuffer bb, ByteBuffer dbb, NORI nf)
-    {
+    private static void addBmpSection(ByteBuffer bb, ByteBuffer dbb) {
         String dcErr,manualFix;
         dcErr="Error: dcount not 1, space was added for BMP id: ";
         manualFix="To solve, manually fix: fsize, gsize, bmpOffsets, & dcount";
-        for(int i=0; i < nf.numBMP; i++)
-        {
-            int addSpace=0;
-            bb.putInt(nf.bmpSpecs[i][0]);
-            bb.putInt(nf.bmpSpecs[i][1]);
-            bb.putInt(nf.bmpSpecs[i][2]);
-            bb.putInt(nf.bmpSpecs[i][3]);
-            bb.putInt(nf.bmpSpecs[i][4]);
-            bb.putInt(nf.bmpSpecs[i][5]);
-            bb.putInt(nf.bmpSpecs[i][6]);
-            byte[] data = new byte[nf.bmpSpecs[i][1]];
-            dbb.get(data,0,nf.bmpSpecs[i][1]);
+        for (int i = 0; i < NORI.numBMP; i++) {
+            int addSpace;
+
+            bb.putInt(NORI.bmpSpecs[i][0]);
+            bb.putInt(NORI.bmpSpecs[i][1]);
+            bb.putInt(NORI.bmpSpecs[i][2]);
+            bb.putInt(NORI.bmpSpecs[i][3]);
+            bb.putInt(NORI.bmpSpecs[i][4]);
+            bb.putInt(NORI.bmpSpecs[i][5]);
+            bb.putInt(NORI.bmpSpecs[i][6]);
+
+            byte[] data = new byte[NORI.bmpSpecs[i][1]];
+            dbb.get(data,0, NORI.bmpSpecs[i][1]);
             bb.put(data);
             pos = bb.position();
-            if(nf.bmpSpecs[i][0]!=1)
-            {
-                if(i!=(nf.numBMP-1))
-                    addSpace = nf.bmpOffsets[i+1]-nf.bmpOffsets[i]-data.length;
-                else
-                    addSpace = (nf.gsize+40) - pos;
-                out.println(dcErr+i+"\n"+manualFix);
-                bb.position(pos+addSpace);
+            if (NORI.bmpSpecs[i][0] != 1) {
+                if (i != (NORI.numBMP -1)) {
+                    addSpace = NORI.bmpOffsets[i + 1]- NORI.bmpOffsets[i] - data.length;
+                } else {
+                    addSpace = (NORI.gsize + 40) - pos;
+                }
+                out.println(dcErr + i + "\n" + manualFix);
+                bb.position(pos + addSpace);
             }
         }
     }
 
-    private static void addAnimOffsets(ByteBuffer bb, NORI nf)
-    {
-        for(int i=0; i < nf.anims; i++)
-        {
-            bb.putInt(nf.animOffsets[i]);
+    private static void addAnimOffsets(ByteBuffer bb) {
+        for (int i = 0; i < NORI.anims; i++) {
+            bb.putInt(NORI.animOffsets[i]);
         }
     }
 
-    private static void addAnims(ByteBuffer bb, NORI nf)
-    {
-        for(int i=0; i < nf.anims; i++)
-        {
-            byte[] animName = new byte[32];
-            animName = (nf.animName[i]).getBytes();
+    private static void addAnims(ByteBuffer bb) {
+        for (int i = 0; i < NORI.anims; i++) {
+            byte[] animName = (NORI.animName[i]).getBytes();
             pos = bb.position();
             bb.put(animName);
             bb.position(pos+32);
-            bb.putInt(nf.frames[i]);
-            addFrameOffsets(bb,i,nf);
-            addFrameData(bb,i,nf);
+            bb.putInt(NORI.frames[i]);
+            addFrameOffsets(bb,i);
+            addFrameData(bb,i);
         }
     }
 
-    private static void addFrameOffsets(ByteBuffer bb, int a, NORI nf)
-    {
-        for(int i=0; i < nf.frames[a]; i++)
-        {
-            bb.putInt(nf.frameOffsets[a][i]);
+    private static void addFrameOffsets(ByteBuffer bb, int a) {
+        for (int i = 0; i < NORI.frames[a]; i++) {
+            bb.putInt(NORI.frameOffsets[a][i]);
         }
     }
 
     // Set actual data for frames (and planes)
-    private static void addFrameData(ByteBuffer bb, int a, NORI nf)
-    {
-        for(int i=0; i < nf.frames[a]; i++)
-        {
-            bb.putInt(nf.frameData[a][i][0]);
-            bb.putInt(nf.frameData[a][i][1]);
-            addPlaneData(bb,a,i,nf);
+    private static void addFrameData(ByteBuffer bb, int a) {
+        for (int i = 0; i < NORI.frames[a]; i++) {
+            bb.putInt(NORI.frameData[a][i][0]);
+            bb.putInt(NORI.frameData[a][i][1]);
+            addPlaneData(bb, a, i);
         }
     }
 
-    private static void addPlaneData(ByteBuffer bb, int a, int f, NORI nf)
-    {
-        for(int i=0; i < nf.frameData[a][f][1]; i++)
-        {
-            bb.putInt(nf.planeData[a][f][i][0]);
-            bb.putInt(nf.planeData[a][f][i][1]);
-            bb.putInt(nf.planeData[a][f][i][2]);
-            bb.putInt(nf.planeData[a][f][i][3]);
-            bb.putInt(nf.planeData[a][f][i][4]);
-            bb.putInt(nf.planeData[a][f][i][5]);
-            bb.putInt(nf.planeData[a][f][i][6]);
+    private static void addPlaneData(ByteBuffer bb, int a, int f) {
+        for (int i = 0; i < NORI.frameData[a][f][1]; i++) {
+            bb.putInt(NORI.planeData[a][f][i][0]);
+            bb.putInt(NORI.planeData[a][f][i][1]);
+            bb.putInt(NORI.planeData[a][f][i][2]);
+            bb.putInt(NORI.planeData[a][f][i][3]);
+            bb.putInt(NORI.planeData[a][f][i][4]);
+            bb.putInt(NORI.planeData[a][f][i][5]);
+            bb.putInt(NORI.planeData[a][f][i][6]);
         }
         // Skip through xtraFrameBytes
-        bb.put(nf.xfb);
+        bb.put(NORI.xfb);
     }
 
     // Cleans the file list, if user is stupid, to make sure only bmp get in
-    private static String[] cleanFL(String[] tmp, NORI nf)
-    {
-        String[] cfl = new String[nf.numBMP];
+    private static String[] cleanFL(String[] tmp) {
+        String[] cfl = new String[NORI.numBMP];
         int x=0;
-        for(int i=0; i < tmp.length; i++)
-        {
-            if((tmp[i].toLowerCase()).endsWith(".bmp")) cfl[x++]=tmp[i];
+
+        for (String s : tmp) {
+            if ((s.toLowerCase()).endsWith(".bmp")) {
+                cfl[x++] = s;
+            }
         }
+
         return cfl;
     }
 
-    private static void getConfigData(File config, NORI nf)
-    {
-        try
-        {
+    private static void getConfigData(File config) {
+        try {
             // Make document object from config file
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             DocumentBuilder dBuilder = dbf.newDocumentBuilder();
@@ -314,32 +287,32 @@ public class Create
             Element noriHdr = getElementByTagName(cfg,"NORI_HDR");
             Element gawiHdr = getElementByTagName(cfg,"GAWI_HDR");
             // Get NORI Header Data
-            nf.fsig    = getIntVal(noriHdr,"fsig");
-            nf.noriVer = getIntVal(noriHdr,"noriver");
-            nf.nParam1 = getIntVal(noriHdr,"nparam1");
-            nf.nParam2 = getIntVal(noriHdr,"nparam2");
-            nf.nParam3 = getIntVal(noriHdr,"nparam3");
-            nf.nParam4 = getIntVal(noriHdr,"nparam4");
-            nf.nParam5 = getIntVal(noriHdr,"nparam5");
-            nf.anims   = getIntVal(noriHdr,"anims");
-            nf.woGawi  = getIntVal(noriHdr,"woGawi");
-            nf.fsize   = getIntVal(noriHdr,"fsize");
+            NORI.fsig = getIntVal(noriHdr,"fsig");
+            NORI.noriVer = getIntVal(noriHdr,"noriver");
+            NORI.nParam1 = getIntVal(noriHdr,"nparam1");
+            NORI.nParam2 = getIntVal(noriHdr,"nparam2");
+            NORI.nParam3 = getIntVal(noriHdr,"nparam3");
+            NORI.nParam4 = getIntVal(noriHdr,"nparam4");
+            NORI.nParam5 = getIntVal(noriHdr,"nparam5");
+            NORI.anims = getIntVal(noriHdr,"anims");
+            NORI.woGawi = getIntVal(noriHdr,"woGawi");
+            NORI.fsize = getIntVal(noriHdr,"fsize");
             // Get GAWI Header Data
-            nf.gsig       = getIntVal(gawiHdr,"gsig");
-            nf.gawiVer    = getIntVal(gawiHdr,"gawiver");
-            nf.bpp        = getIntVal(gawiHdr,"bpp");
-            nf.compressed = getIntVal(gawiHdr,"compressed");
-            nf.hasPalette = getIntVal(gawiHdr,"hasPalette");
-            nf.gParam4    = getIntVal(gawiHdr,"gparam4");
-            nf.gParam5    = getIntVal(gawiHdr,"gparam5");
-            nf.gParam6    = getIntVal(gawiHdr,"gparam6");
-            nf.gParam7    = getIntVal(gawiHdr,"gparam7");
-            nf.numBMP     = getIntVal(gawiHdr,"numBMP");
-            nf.gsize      = getIntVal(gawiHdr,"gsize");
+            NORI.gsig = getIntVal(gawiHdr,"gsig");
+            NORI.gawiVer = getIntVal(gawiHdr,"gawiver");
+            NORI.bpp = getIntVal(gawiHdr,"bpp");
+            NORI.compressed = getIntVal(gawiHdr,"compressed");
+            NORI.hasPalette = getIntVal(gawiHdr,"hasPalette");
+            NORI.gParam4 = getIntVal(gawiHdr,"gparam4");
+            NORI.gParam5 = getIntVal(gawiHdr,"gparam5");
+            NORI.gParam6 = getIntVal(gawiHdr,"gparam6");
+            NORI.gParam7 = getIntVal(gawiHdr,"gparam7");
+            NORI.numBMP = getIntVal(gawiHdr,"numBMP");
+            NORI.gsize = getIntVal(gawiHdr,"gsize");
             // Get BMP Offsets
-            nf.bmpOffsets = getIntArrByTag(cfg,"bmpOffset");
+            NORI.bmpOffsets = getIntArrByTag(cfg,"bmpOffset");
             // Get BMP Specs
-            nf.bmpSpecs = new int[nf.numBMP][7];
+            NORI.bmpSpecs = new int[NORI.numBMP][7];
             int[] dcount  = getIntArrByTag(cfg,"dcount");
             int[] dlen    = getIntArrByTag(cfg,"dlen");
             int[] w       = getIntArrByTag(cfg,"w");
@@ -347,32 +320,31 @@ public class Create
             int[] bparam4 = getIntArrByTag(cfg,"bparam4");
             int[] pos_x   = getIntArrByTag(cfg,"pos_x");
             int[] pos_y   = getIntArrByTag(cfg,"pos_y");
-            for(int bmp=0; bmp < nf.numBMP; bmp++)
-            {
-                nf.bmpSpecs[bmp][0] = dcount[bmp];
-                nf.bmpSpecs[bmp][1] = dlen[bmp];
-                nf.bmpSpecs[bmp][2] = w[bmp];
-                nf.bmpSpecs[bmp][3] = h[bmp];
-                nf.bmpSpecs[bmp][4] = bparam4[bmp];
-                nf.bmpSpecs[bmp][5] = pos_x[bmp];
-                nf.bmpSpecs[bmp][6] = pos_y[bmp];
+            for (int bmp = 0; bmp < NORI.numBMP; bmp++) {
+                NORI.bmpSpecs[bmp][0] = dcount[bmp];
+                NORI.bmpSpecs[bmp][1] = dlen[bmp];
+                NORI.bmpSpecs[bmp][2] = w[bmp];
+                NORI.bmpSpecs[bmp][3] = h[bmp];
+                NORI.bmpSpecs[bmp][4] = bparam4[bmp];
+                NORI.bmpSpecs[bmp][5] = pos_x[bmp];
+                NORI.bmpSpecs[bmp][6] = pos_y[bmp];
             }
             // Get Animation Offsets
-            nf.animOffsets = getIntArrByTag(cfg,"animOffset");
+            NORI.animOffsets = getIntArrByTag(cfg,"animOffset");
             // Get Animation Data
-            nf.animName = getStrArrByTag(cfg,"name");
-            nf.frames   = getIntArrByTag(cfg,"frames");
+            NORI.animName = getStrArrByTag(cfg,"name");
+            NORI.frames = getIntArrByTag(cfg,"frames");
             // Prep Frame Data arrays
-            maxNoF = getMax(nf.frames);
-            nf.frameOffsets = new int[nf.anims][maxNoF];
-            nf.frameData = new int[nf.anims][maxNoF][2];
+            maxNoF = getMax(NORI.frames);
+            NORI.frameOffsets = new int[NORI.anims][maxNoF];
+            NORI.frameData = new int[NORI.anims][maxNoF][2];
             // Get Frame Data Arrays
             int[] frameOff = getIntArrByTag(cfg,"frameOffset");
             int[] delays   = getIntArrByTag(cfg,"delay");
             int[] planes   = getIntArrByTag(cfg,"planes");
             // Prep Plane Data arrays
             maxNoP = getMax(planes);
-            nf.planeData = new int[nf.anims][maxNoF][maxNoP][7];
+            NORI.planeData = new int[NORI.anims][maxNoF][maxNoP][7];
             // Get Plane Data Arrays
             bmp_id     = getIntArrByTag(cfg,"bmp_id");
             point_x    = getIntArrByTag(cfg,"point_x");
@@ -383,57 +355,51 @@ public class Create
             flag_param = getIntArrByTag(cfg,"flag_param");
             // Get Frame Data
             int dex0=0,dex1=0,dex2=0;
-            for(int a=0; a < nf.anims; a++)
-            {
-                for(int f=0; f < nf.frames[a]; f++)
-                {
-                    nf.frameOffsets[a][f] = frameOff[dex0++];
-                    nf.frameData[a][f][0] = delays[dex1++];
-                    nf.frameData[a][f][1] = planes[dex2++];
+            for (int a = 0; a < NORI.anims; a++) {
+                for (int f = 0; f < NORI.frames[a]; f++) {
+                    NORI.frameOffsets[a][f] = frameOff[dex0++];
+                    NORI.frameData[a][f][0] = delays[dex1++];
+                    NORI.frameData[a][f][1] = planes[dex2++];
                     // Get Plane Data
-                    getPlaneData(cfg,a,f,nf);
+                    getPlaneData(cfg,a,f);
                 }
             }
-        }
-        catch(Exception ex)
-        {
+        } catch(Exception ex) {
             out.println("Error in (getConfigData):\n"+ex);
         }
     }
 
-    private static void getPlaneData(Document cfg, int a, int f, NORI nf)
-    {
-        for(int p=0; p < nf.frameData[a][f][1]; p++)
-        {
-            nf.planeData[a][f][p][0] = bmp_id[pdex0++];
-            nf.planeData[a][f][p][1] = point_x[pdex1++];
-            nf.planeData[a][f][p][2] = point_y[pdex2++];
-            nf.planeData[a][f][p][3] = opacity[pdex3++];
-            nf.planeData[a][f][p][4] = flip_axis[pdex4++];
-            nf.planeData[a][f][p][5] = blend_mode[pdex5++];
-            nf.planeData[a][f][p][6] = flag_param[pdex6++];
+    private static void getPlaneData(Document cfg, int a, int f) {
+        for (int p = 0; p < NORI.frameData[a][f][1]; p++) {
+            NORI.planeData[a][f][p][0] = bmp_id[pdex0++];
+            NORI.planeData[a][f][p][1] = point_x[pdex1++];
+            NORI.planeData[a][f][p][2] = point_y[pdex2++];
+            NORI.planeData[a][f][p][3] = opacity[pdex3++];
+            NORI.planeData[a][f][p][4] = flip_axis[pdex4++];
+            NORI.planeData[a][f][p][5] = blend_mode[pdex5++];
+            NORI.planeData[a][f][p][6] = flag_param[pdex6++];
         }
     }
 
     // An anti-duplication + better readability function
-    private static int getMax(int[] array)
-    {
+    private static int getMax(int[] array) {
         int max=0;
-        for(int x : array)
-        {
-            if(x > max) max=x;
+
+        for (int x : array) {
+            if (x > max) {
+                max=x;
+            }
         }
+
         return max;
     }
 
     // Get single int array (int[]) by tagName
-    private static int[] getIntArrByTag(Document cfg, String tag)
-    {
+    private static int[] getIntArrByTag(Document cfg, String tag) {
         NodeList nl = cfg.getElementsByTagName(tag);
         int max = nl.getLength();
         int[] tmp = new int[max];
-        for(int i = 0; i < max; i++)
-        {
+        for (int i = 0; i < max; i++) {
             Node n = nl.item(i);
             tmp[i] = toInt((n.getTextContent()).trim());
         }
@@ -441,13 +407,11 @@ public class Create
     }
 
     // Get single string array (String[]) by tagName
-    private static String[] getStrArrByTag(Document cfg, String tag)
-    {
+    private static String[] getStrArrByTag(Document cfg, String tag) {
         NodeList nl = cfg.getElementsByTagName(tag);
         int max = nl.getLength();
         String[] tmp = new String[max];
-        for(int i = 0; i < max; i++)
-        {
+        for (int i = 0; i < max; i++) {
             Node n = nl.item(i);
             tmp[i] = (n.getTextContent()).trim();
         }
@@ -455,51 +419,42 @@ public class Create
     }
 
     // An anti-duplication + better readability function
-    private static Element getElementByTagName(Document cfg,String tagName)
-    {
+    private static Element getElementByTagName(Document cfg, String tagName) {
         Node node0 = cfg.getElementsByTagName(tagName).item(0);
         return (Element) node0;
     }
 
     // An anti-duplication + better readability function
-    private static int getIntVal(Element parentE,String tagName)
-    {
+    private static int getIntVal(Element parentE, String tagName) {
         Node node0 = parentE.getElementsByTagName(tagName).item(0);
         return toInt((node0.getTextContent()).trim());
     }
 
     // Shorthand function to wrap a byte array in a little-endian bytebuffer
-    private static ByteBuffer mkLEBB(byte[] ba)
-    {
+    private static ByteBuffer mkLEBB(byte[] ba) {
         return ByteBuffer.wrap(ba).order(ByteOrder.LITTLE_ENDIAN);
     }
 
     // An anti-duplication + better readability function
-    private static byte[] file2BA(String fStr)
-    {
-        try
-        {
+    private static byte[] file2BA(String fStr) {
+        try {
             fba = Files.readAllBytes((new File(fStr)).toPath());
-        }
-        catch(Exception ex)
-        {
+        } catch(Exception ex) {
             out.println("Error in (file2BA):\n"+ex);
         }
         return fba;
     }
 
     // An anti-duplication + better readability function
-    private static int toInt(String str)
-    {
-        int i=0;
-        try
-        {
+    private static int toInt(String str) {
+        int i;
+
+        try {
             i = Integer.parseInt(str);
-        }
-        catch(NumberFormatException e)
-        {
+        } catch(NumberFormatException e) {
             i = 0;
         }
+
         return i;
     }
 }

@@ -85,27 +85,25 @@ public class NORI
     // constructor for NORI class
     public NORI() {}
 
-    public static void setNFileVars(File nf, int src)
-    {
+    public static void setNFileVars(File nf, int src) {
         name = nf.getName();// Plain file name
         // Using cfg file, which is the same name & dir, just 4 extra characters
-        if(src!=0)
-        {
-            name = name.substring(0,name.length()-4);
-            if(!(name.endsWith(".bac")||name.endsWith(".nri")))
-            {
+        if (src != 0) {
+            name = name.substring(0, name.length() - 4);
+            if (!(name.endsWith(".bac") || name.endsWith(".nri"))) {
                 out.println("Error: Config file named incorrectly!");
                 System.exit(1);
             }
         }
         dname = name.replace('.','_');// Name without dots (useful)
-        dir = nf.getParent()+fs;// Directory the file is in
-        exdir = dir+dname+fs;// Extraction directory (where bmp go)
+        dir = nf.getParent() + fs;// Directory the file is in
+        exdir = dir + dname + fs;// Extraction directory (where bmp go)
     }
 
-    public static void checkDir()
-    {
-        if(dir.equals("null"+fs)) dir=System.getProperty("user.dir")+fs;
-        exdir = dir+dname+fs;
+    public static void checkDir() {
+        if (dir.equals("null"+fs)) {
+            dir=System.getProperty("user.dir")+fs;
+        }
+        exdir = dir + dname + fs;
     }
 }

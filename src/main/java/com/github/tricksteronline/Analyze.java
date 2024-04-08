@@ -36,56 +36,48 @@ handling a huge amount of data in single file so I think it is decent.
 
 Development Priority: HIGH
 */
-public class Analyze
-{
+public class Analyze {
     // class variables
 
     // constructor for Analyze class
-    public Analyze(byte[] ba, NORI nf, boolean createConfig)
-    {
-        try
-        {
+    public Analyze(byte[] ba, boolean createConfig) {
+        try {
             // Wraps byte array in litte-endian bytebuffer
             ByteBuffer bb = ByteBuffer.wrap(ba).order(ByteOrder.LITTLE_ENDIAN);
             // Analyze the file
-            Analyzer a = new Analyzer(bb,nf);
+            Analyzer a = new Analyzer(bb);
 
             // make NORI config file
-            if(createConfig)
-            {
-                writeCfg(nf);
-                File xfbFile = new File(nf.dir+"xfb"+nf.noriVer+".bin");
-                Files.write(xfbFile.toPath(),nf.xfb);
-                if(nf.hasPalette==1)
-                {
-                    File palFile = new File(nf.dir+nf.name+"_pal.bin");
-                    Files.write(palFile.toPath(),nf.pb);
+            if (createConfig) {
+                writeCfg();
+                File xfbFile = new File(NORI.dir +"xfb"+ NORI.noriVer +".bin");
+                Files.write(xfbFile.toPath(), NORI.xfb);
+                if (NORI.hasPalette ==1) {
+                    File palFile = new File(NORI.dir + NORI.name +"_pal.bin");
+                    Files.write(palFile.toPath(), NORI.pb);
                 }
             }
         }
-        catch(Exception ex)
-        {
+        catch(Exception ex) {
             out.println("Error in (OptA):\n"+ex);
         }
     }
 
     // Prepare and write NORI config file
-    private static void writeCfg(NORI nf)
-    {
-        try
-        {
+    private static void writeCfg() {
+        try {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             DocumentBuilder docBuilder = dbf.newDocumentBuilder();
             Document cfg = docBuilder.newDocument();
             // Root Element
             Element root = cfg.createElement("NORI");
-            root.setAttribute("name",nf.name);
+            root.setAttribute("name", NORI.name);
             cfg.appendChild(root);
             // NORI Header Elements
             Element noriHdr = cfg.createElement("NORI_HDR");
             root.appendChild(noriHdr);
             // NORI Header SubElements
-            setNoriHdrVars(cfg,noriHdr,nf);
+            setNoriHdrVars(cfg, noriHdr);
             // GAWI Elements
             Element gawi = cfg.createElement("GAWI");
             root.appendChild(gawi);
@@ -93,57 +85,52 @@ public class Analyze
             Element gawiHdr = cfg.createElement("GAWI_HDR");
             gawi.appendChild(gawiHdr);
             // NORI Header SubElements
-            setGawiHdrVars(cfg,gawiHdr,nf);
+            setGawiHdrVars(cfg, gawiHdr);
             // Palette Elements
-            if(nf.hasPalette==1)
-            {
+            if (NORI.hasPalette == 1) {
                 Element pal = cfg.createElement("PAL");
                 gawi.appendChild(pal);
-                setPaletteVars(cfg,pal,nf);
+                setPaletteVars(cfg, pal);
             }
             // BMP Offset Elements
-            for(int i=0; i < nf.numBMP; i++)
-            {
+            for (int i = 0; i < NORI.numBMP; i++) {
                 Element bmpOff = cfg.createElement("bmpOffset");
-                bmpOff.setAttribute("id",""+i);
-                bmpOff.appendChild(cfg.createTextNode(""+nf.bmpOffsets[i]));
+                bmpOff.setAttribute("id","" + i);
+                bmpOff.appendChild(cfg.createTextNode("" + NORI.bmpOffsets[i]));
                 gawi.appendChild(bmpOff);
             }
             // BMP Data Elements
-            for(int i=0; i < nf.numBMP; i++)
-            {
+            for (int i = 0; i < NORI.numBMP; i++) {
                 Element bmp = cfg.createElement("BMP");
-                bmp.setAttribute("id",""+i);
-                bmp.setAttribute("offset",""+nf.bmpOffsets[i]+"+"+nf.bpos);
+                bmp.setAttribute("id","" + i);
+                bmp.setAttribute("offset", NORI.bmpOffsets[i] + "+" + NORI.bpos);
                 gawi.appendChild(bmp);
                 // BMP SubElements
-                setBmpSpecs(cfg,bmp,i,nf);
-                Element bmpData = cfg.createElement("RGB"+nf.bpp+"DATA");
+                setBmpSpecs(cfg, bmp, i);
+                Element bmpData = cfg.createElement("RGB"+ NORI.bpp +"DATA");
                 bmp.appendChild(bmpData);
             }
             // Animation Offset Elements
-            for(int i=0; i < nf.anims; i++)
-            {
+            for (int i = 0; i < NORI.anims; i++) {
                 Element animOff = cfg.createElement("animOffset");
                 animOff.setAttribute("id",""+i);
-                animOff.appendChild(cfg.createTextNode(""+nf.animOffsets[i]));
+                animOff.appendChild(cfg.createTextNode(""+ NORI.animOffsets[i]));
                 root.appendChild(animOff);
             }
             // Animation Data Elements
-            for(int i=0; i < nf.anims; i++)
-            {
+            for (int i = 0; i < NORI.anims; i++) {
                 Element anim = cfg.createElement("ANIM");
-                anim.setAttribute("id",""+i);
-                anim.setAttribute("offset",""+nf.animOffsets[i]+"+"+nf.apos);
+                anim.setAttribute("id","" + i);
+                anim.setAttribute("offset", NORI.animOffsets[i] + "+" + NORI.apos);
                 root.appendChild(anim);
                 // Anim SubElements
                 Element name = cfg.createElement("name");
-                name.appendChild(cfg.createTextNode(nf.animName[i]));
+                name.appendChild(cfg.createTextNode(NORI.animName[i]));
                 anim.appendChild(name);
-                mkSubElement(cfg,anim,"frames",nf.frames[i]);
-                setFrameOffsets(cfg,anim,i,nf);
+                mkSubElement(cfg, anim,"frames", NORI.frames[i]);
+                setFrameOffsets(cfg, anim, i);
                 // Frame Data and SubElements
-                setFrames(cfg,anim,i,nf);
+                setFrames(cfg, anim, i);
             }
 
             // Prep xml data
@@ -155,123 +142,110 @@ public class Analyze
             t.setOutputProperty(indentAmount,"2");
             // Output xml config file
             DOMSource src = new DOMSource(cfg);
-            File config = new File(nf.dir+nf.name+".cfg");
+            File config = new File(NORI.dir + NORI.name +".cfg");
             StreamResult file = new StreamResult(config);
             t.transform(src, file);
         }
-        catch(Exception ex)
-        {
+        catch (Exception ex) {
             out.println("Error in (mkCfg):\n"+ex);
         }
     }
 
-    private static void setNoriHdrVars(Document cfg, Element e, NORI nf)
-    {
-        mkSubElement(cfg, e, "fsig", nf.fsig);
-        mkSubElement(cfg, e, "noriver", nf.noriVer);
-        mkSubElement(cfg, e, "nparam1", nf.nParam1);
-        mkSubElement(cfg, e, "nparam2", nf.nParam2);
-        mkSubElement(cfg, e, "nparam3", nf.nParam3);
-        mkSubElement(cfg, e, "nparam4", nf.nParam4);
-        mkSubElement(cfg, e, "nparam5", nf.nParam5);
-        mkSubElement(cfg, e, "anims", nf.anims);
-        mkSubElement(cfg, e, "woGawi", nf.woGawi);
-        mkSubElement(cfg, e, "fsize", nf.fsize);
+    private static void setNoriHdrVars(Document cfg, Element e) {
+        mkSubElement(cfg, e, "fsig", NORI.fsig);
+        mkSubElement(cfg, e, "noriver", NORI.noriVer);
+        mkSubElement(cfg, e, "nparam1", NORI.nParam1);
+        mkSubElement(cfg, e, "nparam2", NORI.nParam2);
+        mkSubElement(cfg, e, "nparam3", NORI.nParam3);
+        mkSubElement(cfg, e, "nparam4", NORI.nParam4);
+        mkSubElement(cfg, e, "nparam5", NORI.nParam5);
+        mkSubElement(cfg, e, "anims", NORI.anims);
+        mkSubElement(cfg, e, "woGawi", NORI.woGawi);
+        mkSubElement(cfg, e, "fsize", NORI.fsize);
     }
 
-    private static void setGawiHdrVars(Document cfg, Element e, NORI nf)
-    {
-        mkSubElement(cfg, e, "gsig", nf.gsig);
-        mkSubElement(cfg, e, "gawiver", nf.gawiVer);
-        mkSubElement(cfg, e, "bpp", nf.bpp);
-        mkSubElement(cfg, e, "compressed", nf.compressed);
-        mkSubElement(cfg, e, "hasPalette", nf.hasPalette);
-        mkSubElement(cfg, e, "gparam4", nf.gParam4);
-        mkSubElement(cfg, e, "gparam5", nf.gParam5);
-        mkSubElement(cfg, e, "gparam6", nf.gParam6);
-        mkSubElement(cfg, e, "gparam7", nf.gParam7);
-        mkSubElement(cfg, e, "numBMP", nf.numBMP);
-        mkSubElement(cfg, e, "gsize", nf.gsize);
+    private static void setGawiHdrVars(Document cfg, Element e) {
+        mkSubElement(cfg, e, "gsig", NORI.gsig);
+        mkSubElement(cfg, e, "gawiver", NORI.gawiVer);
+        mkSubElement(cfg, e, "bpp", NORI.bpp);
+        mkSubElement(cfg, e, "compressed", NORI.compressed);
+        mkSubElement(cfg, e, "hasPalette", NORI.hasPalette);
+        mkSubElement(cfg, e, "gparam4", NORI.gParam4);
+        mkSubElement(cfg, e, "gparam5", NORI.gParam5);
+        mkSubElement(cfg, e, "gparam6", NORI.gParam6);
+        mkSubElement(cfg, e, "gparam7", NORI.gParam7);
+        mkSubElement(cfg, e, "numBMP", NORI.numBMP);
+        mkSubElement(cfg, e, "gsize", NORI.gsize);
     }
 
-    private static void setPaletteVars(Document cfg, Element e, NORI nf)
-    {
-        mkSubElement(cfg, e, "psig", nf.psig);
-        mkSubElement(cfg, e, "palver", nf.palVer);
-        mkSubElement(cfg, e, "pparam1", nf.pParam1);
-        mkSubElement(cfg, e, "pparam2", nf.pParam2);
-        mkSubElement(cfg, e, "pparam3", nf.pParam3);
-        mkSubElement(cfg, e, "pparam4", nf.pParam4);
-        mkSubElement(cfg, e, "divided", nf.divided);
-        mkSubElement(cfg, e, "psize", nf.psize);
+    private static void setPaletteVars(Document cfg, Element e) {
+        mkSubElement(cfg, e, "psig", NORI.psig);
+        mkSubElement(cfg, e, "palver", NORI.palVer);
+        mkSubElement(cfg, e, "pparam1", NORI.pParam1);
+        mkSubElement(cfg, e, "pparam2", NORI.pParam2);
+        mkSubElement(cfg, e, "pparam3", NORI.pParam3);
+        mkSubElement(cfg, e, "pparam4", NORI.pParam4);
+        mkSubElement(cfg, e, "divided", NORI.divided);
+        mkSubElement(cfg, e, "psize", NORI.psize);
         Element palData = cfg.createElement("RGB24DATA");
         e.appendChild(palData);
-        if(nf.psize==808)
-        {
-            mkSubElement(cfg,e,"mainS",nf.mainS);
-            mkSubElement(cfg,e,"mainE",nf.mainE);
+        if (NORI.psize == 808) {
+            mkSubElement(cfg, e,"mainS", NORI.mainS);
+            mkSubElement(cfg, e,"mainE", NORI.mainE);
         }
     }
 
-    private static void setBmpSpecs(Document cfg, Element e, int i, NORI nf)
-    {
-        mkSubElement(cfg, e, "dcount", nf.bmpSpecs[i][0]);
-        mkSubElement(cfg, e, "dlen", nf.bmpSpecs[i][1]);
-        mkSubElement(cfg, e, "w", nf.bmpSpecs[i][2]);
-        mkSubElement(cfg, e, "h", nf.bmpSpecs[i][3]);
-        mkSubElement(cfg, e, "bparam4", nf.bmpSpecs[i][4]);
-        mkSubElement(cfg, e, "pos_x", nf.bmpSpecs[i][5]);
-        mkSubElement(cfg, e, "pos_y", nf.bmpSpecs[i][6]);
+    private static void setBmpSpecs(Document cfg, Element e, int i) {
+        mkSubElement(cfg, e, "dcount", NORI.bmpSpecs[i][0]);
+        mkSubElement(cfg, e, "dlen", NORI.bmpSpecs[i][1]);
+        mkSubElement(cfg, e, "w", NORI.bmpSpecs[i][2]);
+        mkSubElement(cfg, e, "h", NORI.bmpSpecs[i][3]);
+        mkSubElement(cfg, e, "bparam4", NORI.bmpSpecs[i][4]);
+        mkSubElement(cfg, e, "pos_x", NORI.bmpSpecs[i][5]);
+        mkSubElement(cfg, e, "pos_y", NORI.bmpSpecs[i][6]);
     }
 
-    private static void setFrameOffsets(Document cfg,Element e,int a,NORI nf)
-    {
+    private static void setFrameOffsets(Document cfg, Element e, int a) {
         // Frame Offset Elements
-        for(int i=0; i < nf.frames[a]; i++)
-        {
+        for (int i = 0; i < NORI.frames[a]; i++) {
             Element frameOff = cfg.createElement("frameOffset");
             frameOff.setAttribute("id",""+i);
-            frameOff.appendChild(cfg.createTextNode(""+nf.frameOffsets[a][i]));
+            frameOff.appendChild(cfg.createTextNode(""+ NORI.frameOffsets[a][i]));
             e.appendChild(frameOff);
         }
     }
 
-    private static void setFrames(Document cfg,Element e,int a,NORI nf)
-    {
+    private static void setFrames(Document cfg, Element e, int a) {
         // Frame Offset Elements
-        for(int i=0; i < nf.frames[a]; i++)
-        {
+        for (int i = 0; i < NORI.frames[a]; i++) {
             Element frame = cfg.createElement("frame");
-            frame.setAttribute("id",""+i);
-            frame.setAttribute("offset",""+nf.frameOffsets[a][i]);
+            frame.setAttribute("id","" + i);
+            frame.setAttribute("offset","" + NORI.frameOffsets[a][i]);
             e.appendChild(frame);
-            mkSubElement(cfg,frame,"delay",nf.frameData[a][i][0]);
-            mkSubElement(cfg,frame,"planes",nf.frameData[a][i][1]);
-            setPlanes(cfg,frame,a,i,nf);
-            mkSubElement(cfg,frame,"xfb",nf.xtraFrameBytes);
+            mkSubElement(cfg,frame,"delay", NORI.frameData[a][i][0]);
+            mkSubElement(cfg,frame,"planes", NORI.frameData[a][i][1]);
+            setPlanes(cfg, frame, a, i);
+            mkSubElement(cfg, frame,"xfb", NORI.xtraFrameBytes);
         }
     }
 
-    private static void setPlanes(Document cfg,Element e,int a,int f, NORI nf)
-    {
-        for(int i=0; i < nf.frameData[a][f][1]; i++)
-        {
+    private static void setPlanes(Document cfg, Element e, int a, int f) {
+        for (int i = 0; i < NORI.frameData[a][f][1]; i++) {
             Element plane = cfg.createElement("plane");
             plane.setAttribute("id",""+i);
             e.appendChild(plane);
-            mkSubElement(cfg,plane,"bmp_id", nf.planeData[a][f][i][0]);
-            mkSubElement(cfg,plane,"point_x", nf.planeData[a][f][i][1]);
-            mkSubElement(cfg,plane,"point_y", nf.planeData[a][f][i][2]);
-            mkSubElement(cfg,plane,"opacity", nf.planeData[a][f][i][3]);
-            mkSubElement(cfg,plane,"flip_axis", nf.planeData[a][f][i][4]);
-            mkSubElement(cfg,plane,"blend_mode", nf.planeData[a][f][i][5]);
-            mkSubElement(cfg,plane,"flag_param", nf.planeData[a][f][i][6]);
+            mkSubElement(cfg,plane,"bmp_id", NORI.planeData[a][f][i][0]);
+            mkSubElement(cfg,plane,"point_x", NORI.planeData[a][f][i][1]);
+            mkSubElement(cfg,plane,"point_y", NORI.planeData[a][f][i][2]);
+            mkSubElement(cfg,plane,"opacity", NORI.planeData[a][f][i][3]);
+            mkSubElement(cfg,plane,"flip_axis", NORI.planeData[a][f][i][4]);
+            mkSubElement(cfg,plane,"blend_mode", NORI.planeData[a][f][i][5]);
+            mkSubElement(cfg,plane,"flag_param", NORI.planeData[a][f][i][6]);
         }
     }
 
     // Make Element child (Element's Element)
-    private static void mkSubElement(Document cfg,Element e,String name,int val)
-    {
+    private static void mkSubElement(Document cfg, Element e, String name, int val) {
         Element subE = cfg.createElement(name);
         subE.appendChild(cfg.createTextNode(""+val));
         e.appendChild(subE);
